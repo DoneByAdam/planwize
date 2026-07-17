@@ -1,0 +1,42 @@
+{
+  "_comment": "Annual IRS + payroll figures. Update each November when the IRS publishes COLA notices (irs.gov) and SSA publishes the wage base (ssa.gov). The app falls back to the latest year present.",
+  "updated": "2026-07-17",
+  "years": {
+    "2025": {
+      "deferralLimit402g": 23500,
+      "catchUp50": 7500,
+      "catchUp60to63": 11250,
+      "totalAdditions415c": 70000,
+      "compLimit401a17": 350000,
+      "ssWageBase": 176100,
+      "ssRate": 0.062,
+      "medicareRate": 0.0145,
+      "addlMedicareRate": 0.009,
+      "addlMedicareThreshold": 200000,
+      "rothCatchUpWageThreshold": 145000,
+      "standardDeduction": { "single": 15750, "mfj": 31500 },
+      "brackets": {
+        "single": [[0,0.10],[11925,0.12],[48475,0.22],[103350,0.24],[197300,0.32],[250525,0.35],[626350,0.37]],
+        "mfj":    [[0,0.10],[23850,0.12],[96950,0.22],[206700,0.24],[394600,0.32],[501050,0.35],[751600,0.37]]
+      }
+    },
+    "2026": {
+      "deferralLimit402g": 24500,
+      "catchUp50": 8000,
+      "catchUp60to63": 11250,
+      "totalAdditions415c": 72000,
+      "compLimit401a17": 360000,
+      "ssWageBase": 184500,
+      "ssRate": 0.062,
+      "medicareRate": 0.0145,
+      "addlMedicareRate": 0.009,
+      "addlMedicareThreshold": 200000,
+      "rothCatchUpWageThreshold": 150000,
+      "standardDeduction": { "single": 16100, "mfj": 32200 },
+      "brackets": {
+        "single": [[0,0.10],[12400,0.12],[50400,0.22],[105700,0.24],[201775,0.32],[256225,0.35],[640600,0.37]],
+        "mfj":    [[0,0.10],[24800,0.12],[100800,0.22],[211400,0.24],[403550,0.32],[512450,0.35],[768700,0.37]]
+      }
+    }
+  }
+}

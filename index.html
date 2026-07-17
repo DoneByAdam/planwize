@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MaxOut — 401(k) Contribution Planner</title>
+<meta name="description" content="Plan every paycheck: hit the IRS limit exactly, capture your full employer match, and see the tax savings.">
+<meta name="theme-color" content="#0f1d2e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f1d2e'/%3E%3Crect x='10' y='34' width='8' height='18' rx='2' fill='%233ddc97'/%3E%3Crect x='22' y='26' width='8' height='26' rx='2' fill='%233ddc97'/%3E%3Crect x='34' y='18' width='8' height='34' rx='2' fill='%233ddc97'/%3E%3Crect x='46' y='10' width='8' height='26' rx='2' fill='%23b9770e'/%3E%3Crect x='46' y='10' width='8' height='8' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand">
+    <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13273d"/><rect x="10" y="34" width="8" height="18" rx="2" fill="#3ddc97"/><rect x="22" y="26" width="8" height="26" rx="2" fill="#3ddc97"/><rect x="34" y="18" width="8" height="34" rx="2" fill="#3ddc97"/><rect x="46" y="10" width="8" height="26" rx="2" fill="#b9770e"/><rect x="46" y="10" width="8" height="8" rx="2" fill="#fff"/></svg>
+    MaxOut <span class="yr" id="brandYear">2026</span>
+  </span>
+  <span class="spacer"></span>
+  <button class="chip-btn" id="reportBtn">PDF report</button>
+  <button class="chip-btn primary" id="authBtn"><span class="sync-dot" id="syncDot"></span><span id="authBtnLabel">Sign in</span></button>
+</header>
+
+<nav class="nav" aria-label="Sections">
+  <button data-view="dashboard" class="active"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Overview</button>
+  <button data-view="inputs"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="18" cy="12" r="2.5"/><circle cx="14" cy="18" r="2.5"/></svg>Inputs</button>
+  <button data-view="paychecks"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 15h4"/></svg>Paychecks</button>
+  <button data-view="scenarios"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M6 20V10M12 20V4M18 20v-7"/></svg>Compare</button>
+  <button data-view="projection"><svg fill="none" stroke-width="2" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Grow</button>
+</nav>
+
+<main class="wrap">
+  <div class="banner" id="guestBanner" hidden>
+    <span>You're in <strong>try-it mode</strong> — everything works and saves to this device. Create a free account to keep your plan across devices.</span>
+    <button class="btn ghost" id="bannerSignup" style="min-height:38px;padding:8px 14px">Create account</button>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="view active" id="view-dashboard">
+    <h1>Your <span id="dashYear">2026</span> contribution plan</h1>
+    <p class="sub" id="dashTagline">Every paycheck, planned — IRS limits, employer match, and taxes handled.</p>
+
+    <div class="card">
+      <h2>The year, paycheck by paycheck</h2>
+      <div class="paystrip" id="paystrip" role="img" aria-label="Contribution level for each of 26 paychecks"></div>
+      <div class="striplegend">
+        <span><span class="swatch" style="background:var(--green)"></span>Contributing</span>
+        <span><span class="swatch" style="background:var(--amber)"></span>Limit hit this pay</span>
+        <span><span class="swatch" style="background:#e8ece5"></span>No contribution</span>
+        <span><span class="swatch" style="background:var(--ink);border-radius:50%"></span>Bonus lands</span>
+        <span><span class="swatch" style="background:#fff;box-shadow:inset -4px 0 0 var(--red)"></span>Social Security tax stops</span>
+      </div>
+    </div>
+
+    <div class="grid cols-3">
+      <div class="stat"><div class="lab">Your IRS limit</div><div class="val" id="stLimit">—</div><div class="note" id="stLimitNote"></div></div>
+      <div class="stat"><div class="lab">Planned deferral</div><div class="val" id="stDeferral">—</div><div class="note" id="stDeferralNote"></div></div>
+      <div class="stat"><div class="lab">Employer match</div><div class="val" id="stMatch">—</div><div class="note" id="stMatchNote"></div></div>
+      <div class="stat"><div class="lab">Federal tax saved</div><div class="val good" id="stTaxSaved">—</div><div class="note">vs. contributing $0 pre-tax</div></div>
+      <div class="stat"><div class="lab">Rate to max exactly</div><div class="val" id="stMaxRate">—</div><div class="note">fills the limit on your last paycheck</div></div>
+      <div class="stat"><div class="lab">Balance at retirement</div><div class="val" id="stBalance">—</div><div class="note" id="stBalanceNote"></div></div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Coaching corner</h2>
+      <div id="insights"></div>
+      <p class="footer-note">Guidance draws on published rules of thumb from Fidelity, Vanguard, and IRS rules — see each note's source. This is education, not individual tax or investment advice.</p>
+    </div>
+  </section>
+
+  <!-- ============ INPUTS ============ -->
+  <section class="view" id="view-inputs">
+    <h1>Inputs</h1>
+    <p class="sub">Change anything — the whole plan recalculates instantly. IRS figures load automatically for your plan year.</p>
+
+    <div class="card">
+      <h2>You</h2>
+      <div class="frow f3">
+        <div class="field"><label for="planYear">Plan year</label><select id="planYear"></select></div>
+        <div class="field"><label for="filing">Filing status</label>
+          <select id="filing"><option value="single">Single</option><option value="mfj">Married filing jointly</option></select></div>
+        <div class="field"><label for="birthYear">Birth year</label><input id="birthYear" type="number" inputmode="numeric">
+          <div class="hint" id="catchupHint"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pay</h2>
+      <div class="frow f3">
+        <div class="field"><label for="firstPay">First pay date of year</label><input id="firstPay" type="date"></div>
+        <div class="field"><label for="bonusPct">Bonus target %</label><input id="bonusPct" type="number" step="0.5" inputmode="decimal"></div>
+        <div class="field"><label for="bonusPeriod">Bonus lands in pay #</label><input id="bonusPeriod" type="number" min="1" max="26" inputmode="numeric"></div>
+      </div>
+      <label style="font-size:12.5px;font-weight:700;color:var(--ink-2)">Salary schedule (handles mid-year raises)</label>
+      <table class="minitable" id="salaryTable">
+        <thead><tr><th>From pay #</th><th>Annual salary</th><th></th></tr></thead><tbody></tbody>
+      </table>
+      <button class="addrow" id="addSalary">+ Add a raise</button>
+    </div>
+
+    <div class="card">
+      <h2>Contribution rates</h2>
+      <p class="hint" style="font-size:12.5px;color:var(--ink-2);margin-bottom:8px">Rates apply from a pay period onward — model mid-year changes without touching the schedule.</p>
+      <table class="minitable" id="rateTable">
+        <thead><tr><th>From pay #</th><th>Pre-tax %</th><th>Roth %</th><th>After-tax %</th><th></th></tr></thead><tbody></tbody>
+      </table>
+      <button class="addrow" id="addRate">+ Add a rate change</button>
+    </div>
+
+    <div class="card">
+      <h2>Employer match</h2>
+      <div class="frow f3">
+        <div class="field"><label for="matchRate">Match rate (% of your contribution)</label><input id="matchRate" type="number" step="5" inputmode="decimal"></div>
+        <div class="field"><label for="matchCap">Match cap (% of pay)</label><input id="matchCap" type="number" step="0.5" inputmode="decimal"></div>
+        <div class="field"><label for="trueUp">Plan has annual true-up?</label>
+          <select id="trueUp"><option value="no">No / not sure</option><option value="yes">Yes</option></select>
+          <div class="hint">Without a true-up, maxing out early forfeits match on later paychecks.</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Growth</h2>
+      <div class="frow f3">
+        <div class="field"><label for="balance">Current 401(k) balance</label><input id="balance" type="number" inputmode="numeric"></div>
+        <div class="field"><label for="retireAge">Retirement age</label><input id="retireAge" type="number" inputmode="numeric"></div>
+        <div class="field"><label for="expReturn">Expected annual return %</label><input id="expReturn" type="number" step="0.5" inputmode="decimal"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label for="contribGrowth">Annual contribution growth %</label><input id="contribGrowth" type="number" step="0.5" inputmode="decimal">
+          <div class="hint">Approximates raises + yearly IRS limit increases.</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>IRS figures in effect · <span id="irsYearLabel"></span></h2>
+      <div id="irsReadout" style="font-family:var(--font-mono);font-size:13px;line-height:2"></div>
+      <p class="footer-note" id="irsSource"></p>
+    </div>
+  </section>
+
+  <!-- ============ PAYCHECKS ============ -->
+  <section class="view" id="view-paychecks">
+    <h1>Paychecks</h1>
+    <p class="sub">All 26 pays, auto-capped at your IRS limit. Amber rows show where the cap kicks in.</p>
+    <div class="tablewrap"><table class="paytable" id="payTable"></table></div>
+    <p class="footer-note">Take-home is an estimate for comparing plans: gross − contributions − Social Security − Medicare − federal tax at your effective rate. It excludes state and local tax, insurance premiums, HSA, and other deductions.</p>
+  </section>
+
+  <!-- ============ SCENARIOS ============ -->
+  <section class="view" id="view-scenarios">
+    <h1>Compare strategies</h1>
+    <p class="sub">Edit the rates in any card — taxes, match capture, and take-home update live.</p>
+    <div class="scn-scroll" id="scnRow"></div>
+    <div class="card" style="margin-top:16px"><h2>Take-home vs. retirement dollars</h2><canvas id="scnChart" height="220"></canvas></div>
+  </section>
+
+  <!-- ============ PROJECTION ============ -->
+  <section class="view" id="view-projection">
+    <h1>Where it compounds</h1>
+    <p class="sub" id="prjSub"></p>
+    <div class="grid cols-3">
+      <div class="stat"><div class="lab">At retirement</div><div class="val good" id="prjBalance">—</div></div>
+      <div class="stat"><div class="lab">Yearly income (4% rule)</div><div class="val" id="prjIncome">—</div></div>
+      <div class="stat"><div class="lab">Total you'll contribute</div><div class="val" id="prjContrib">—</div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><canvas id="prjChart" height="260"></canvas></div>
+    <p class="footer-note">Assumes contributions at the start of each year, growing annually; returns compound on balance + contribution. Long-run stock/bond blends have historically returned ~5–9% nominal — stress-test both ends.</p>
+  </section>
+</main>
+
+<!-- ============ AUTH MODAL ============ -->
+<div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="box">
+    <button class="close" data-close aria-label="Close">×</button>
+    <h2 id="authTitle">Keep your plan</h2>
+    <p class="sub" style="margin-bottom:0">Free account. Your plan syncs across devices, protected end to end.</p>
+    <div class="tabs"><button id="tabSignin" class="active">Sign in</button><button id="tabSignup">Create account</button></div>
+    <div class="field"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email"></div>
+    <div class="field"><label for="authPass">Password</label><input id="authPass" type="password" autocomplete="current-password" minlength="8">
+      <div class="hint">At least 8 characters.</div></div>
+    <div class="field" id="encFieldWrap">
+      <label for="encPass">Encryption passphrase <span style="font-weight:400">(optional, recommended)</span></label>
+      <input id="encPass" type="password" autocomplete="off">
+      <div class="hint">Encrypts your financial data on your device (AES-256-GCM) before it's stored — not even the server can read it. <strong>If you lose this passphrase, the data can't be recovered.</strong></div>
+    </div>
+    <button class="btn" id="authSubmit" style="width:100%">Sign in</button>
+    <div class="notice" id="authNotice" hidden></div>
+    <div class="notice">Signed-out mode keeps working anytime — data stays on this device only.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
