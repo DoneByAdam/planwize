@@ -3,7 +3,7 @@
    Optional Supabase backend for accounts + sync (see README.md). */
 "use strict";
 
-const APP_VERSION = "10.0";
+const APP_VERSION = "11.0";
 
 /* ============================================================
    CONFIG — paste your Supabase project values to enable accounts.
@@ -839,22 +839,28 @@ function migrateData(v) {
 }
 
 function loadStore() {
+  // one-time carry-over from the pre-rename "planwise.*" keys (multi-plan store)
+  if (!localStorage.getItem("planwize.plans") && localStorage.getItem("planwise.plans")) {
+    localStorage.setItem("planwize.plans", localStorage.getItem("planwise.plans"));
+    if (localStorage.getItem("planwise.currentPlan")) localStorage.setItem("planwize.currentPlan", localStorage.getItem("planwise.currentPlan"));
+    localStorage.removeItem("planwise.plans"); localStorage.removeItem("planwise.currentPlan");
+  }
   try {
-    plans = JSON.parse(localStorage.getItem("planwise.plans")) || [];
+    plans = JSON.parse(localStorage.getItem("planwize.plans")) || [];
   } catch { plans = []; }
-  // migrate the pre-v8 single-plan store
+  // migrate the oldest single-plan key (pre-v8), under either name
   if (!plans.length) {
-    let raw = localStorage.getItem("planwise.plan");   // migrate the pre-v8 single-plan key
+    let raw = localStorage.getItem("planwize.plan") || localStorage.getItem("planwise.plan");
     if (raw) {
       try {
         const data = migrateData(JSON.parse(raw));
         plans = [{ id: newId(), name: (data.planYear || "My") + " plan", created: Date.now(), updated: Date.now(), data }];
       } catch { /* ignore corrupt */ }
-      localStorage.removeItem("planwise.plan");
+      localStorage.removeItem("planwize.plan"); localStorage.removeItem("planwise.plan");
     }
   }
   plans.forEach(p => p.data = migrateData(p.data));
-  currentPlanId = localStorage.getItem("planwise.currentPlan");
+  currentPlanId = localStorage.getItem("planwize.currentPlan");
   if (!plans.find(p => p.id === currentPlanId)) currentPlanId = plans[0]?.id || null;
   if (!currentPlanId) {
     const p = { id: newId(), name: new Date().getFullYear() + 1 + " plan", created: Date.now(), updated: Date.now(), data: structuredClone(DEFAULT_STATE) };
@@ -864,8 +870,8 @@ function loadStore() {
   return structuredClone(plans.find(p => p.id === currentPlanId).data);
 }
 function saveStore() {
-  localStorage.setItem("planwise.plans", JSON.stringify(plans));
-  localStorage.setItem("planwise.currentPlan", currentPlanId);
+  localStorage.setItem("planwize.plans", JSON.stringify(plans));
+  localStorage.setItem("planwize.currentPlan", currentPlanId);
 }
 function currentPlan() { return plans.find(p => p.id === currentPlanId); }
 
@@ -1034,7 +1040,7 @@ function createPlan() {
    Primary: a Supabase "feedback" table (see schema.sql).
    Fallbacks when no backend: GitHub issues, then email.
    ============================================================ */
-const GITHUB_ISSUES_URL = "https://github.com/DoneByAdam/Planwize/issues";
+const GITHUB_ISSUES_URL = "https://github.com/DoneByAdam/planwize/issues";
 const CONTACT_EMAIL = "";   // optional mailto fallback, e.g. "you@example.com"
 async function sendFeedback() {
   if ($("fbHoney").value) { $("contactModal").classList.remove("open"); return; }  // bot honeypot
